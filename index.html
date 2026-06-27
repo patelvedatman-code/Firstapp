@@ -1,66 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Text Extractor</title>
-<style>
-body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f0f2f5; }
-.box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-#image-input { margin-bottom: 20px; }
-button { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-button:active { background: #0056b3; }
-textarea { width: 100%; height: 250px; margin-top: 15px; padding: 12px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
-#status { color: #666; font-style: italic; margin: 15px 0 5px 0; text-align: center; }
-</style>
-<!-- Load the OCR Engine library -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Text Extractor</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f0f2f5; }
+        .box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        #image-input { margin-bottom: 20px; }
+        button { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:active { background: #0056b3; }
+        textarea { width: 100%; height: 250px; margin-top: 15px; padding: 12px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        #status { color: #666; font-style: italic; margin: 15px 0 5px 0; text-align: center; }
+    </style>
+    <!-- Load the OCR Engine library -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
 <div class="box">
-<h2>Book Text Extractor</h2>
-<input type="file" id="image-input" accept="image/*"><br>
-<button id="extract-btn">Extract Text</button>
-<div id="status">Ready.</div>
-<textarea id="output-text" placeholder="Your extracted text will appear here..."></textarea>
+    <h2>Book Text Extractor</h2>
+    <input type="file" id="image-input" accept="image/*"><br>
+    <button id="extract-btn">Extract Text</button>
+    <div id="status">Ready.</div>
+    <textarea id="output-text" placeholder="Your extracted text will appear here..."></textarea>
 </div>
 
 <script>
-document.getElementById('extract-btn').addEventListener('click', () => {
-const fileInput = document.getElementById('image-input');
-const statusDiv = document.getElementById('status');
-const outputText = document.getElementById('output-text');
+    document.getElementById('extract-btn').addEventListener('click', () => {
+        const fileInput = document.getElementById('image-input');
+        const statusDiv = document.getElementById('status');
+        const outputText = document.getElementById('output-text');
 
-if (fileInput.files.length === 0) {
-alert('Please select a screenshot first!');
-return;
-}
+        if (fileInput.files.length === 0) {
+            alert('Please select a screenshot first!');
+            return;
+        }
 
-const imageFile = fileInput.files[0];
-statusDiv.innerText = 'Processing image... This takes a few seconds.';
-outputText.value = '';
+        const imageFile = fileInput.files[0];
+        statusDiv.innerText = 'Processing image... This takes a few seconds.';
+        outputText.value = '';
 
-// Offline-ready OCR implementation
-Tesseract.recognize(
-imageFile,
-'eng',
-{
-workerBlobURL: true, // Forces local caching of processing threads
-logger: m => {
-if(m.status === 'recognizing') {
-statusDiv.innerText = Reading: ${Math.round(m.progress * 100)}%;
-}
-}
-}
-).then(({ data: { text } }) => {
-statusDiv.innerText = 'Extraction complete!';
-outputText.value = text;
-}).catch(err => {
-statusDiv.innerText = 'An error occurred during scanning.';
-console.error(err);
-});
-});
+        // Standard, ultra-reliable OCR configuration
+        Tesseract.recognize(
+            imageFile,
+            'eng',
+            {
+                logger: m => {
+                    if (m.status === 'recognizing') {
+                        // Fixed: wrapped properly in backticks so it tracks progress safely
+                        statusDiv.innerText = `Reading: ${Math.round(m.progress * 100)}%`;
+                    }
+                }
+            }
+        ).then(({ data: { text } }) => {
+            if (!text || text.trim() === "") {
+                statusDiv.innerText = "Scanning done, but no clear text was found.";
+                outputText.value = "Try a clearer or higher contrast screenshot!";
+            } else {
+                statusDiv.innerText = 'Extraction complete!';
+                outputText.value = text;
+            }
+        }).catch(err => {
+            statusDiv.innerText = 'An error occurred during scanning.';
+            console.error(err);
+        });
+    });
 </script>
 
 </body>
